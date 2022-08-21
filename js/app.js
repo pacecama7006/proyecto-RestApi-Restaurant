@@ -131,10 +131,28 @@ function mostrarPlatillos(platillos) {
          */
         categoria.textContent = categorias[platillo.categoria];
 
+        /**Construyo un input para la cantidad de alimentos
+         * que el usuario va a consumir con su type,min,id
+         * y classlist form-control y su value en 0
+         */
+        const inputCantidad = document.createElement('input');
+        inputCantidad.type = 'number';
+        inputCantidad.min = 0;
+        inputCantidad.value = 0;
+        inputCantidad.id = `producto-${platillo.id}`;
+        inputCantidad.classList.add('form-control');
+        // Creo un div para agregar el input y meterlo
+        // en la grid de bootstrap
+        const agregar = document.createElement('div');
+        agregar.classList.add('col-md-2');
+        // agrego el boton al div
+        agregar.appendChild(inputCantidad)
+
         // Agrego el nombre, el precio a la fila
         row.appendChild(nombre);
         row.appendChild(precio);
         row.appendChild(categoria);
+        row.appendChild(agregar);
 
         // Agrego la fila al contenido
         contenidoDiv.appendChild(row);
