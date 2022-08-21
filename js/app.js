@@ -11,6 +11,13 @@ let cliente = {
     pedido: []
 };
 
+// Objeto de categorias
+const categorias = {
+    1: 'Comida',
+    2: 'Bebidas',
+    3: 'Postres'
+}
+
 guardarClienteBtn.addEventListener('click', guardarCliente);
 
 function guardarCliente() {
@@ -36,7 +43,7 @@ function guardarCliente() {
 
     // Lleno el objeto de cliente utilizando spreadOperator con una copia
     cliente = {...cliente, mesa, hora};
-    console.log(cliente);
+    // console.log(cliente);
 
     // Oculatar el modal
     // Como está hecho con bootstrap, tengo que acceder a sus métodos
@@ -48,6 +55,9 @@ function guardarCliente() {
 
     // Muestra las secciones de platillos y resumen de consumo
     mostrarSecciones();
+
+    // Obtener platillos de la api de Json Server
+    obtenerPlatillos();
 
 }
 // Fin guardarCliente
@@ -73,3 +83,61 @@ function mostrarSecciones() {
     });
 }
 // Fin mostrarSecciones
+
+function obtenerPlatillos() {
+    const url = 'http://localhost:4000/platillos';
+
+    fetch(url)
+        .then(respuesta => respuesta.json())
+        .then(resultado =>{
+            // console.log(resultado);
+            mostrarPlatillos(resultado);
+        })
+        .catch(error => {
+            console.log(error);
+        })
+}
+// Fin obtenerPlatillos
+
+function mostrarPlatillos(platillos) {
+    // console.log(platillos);
+    // Selecciono el div de contenido
+    const contenidoDiv = document.querySelector('#platillos .contenido');
+
+    // Recorro el arreglo de platillos
+    platillos.forEach(platillo => {
+        
+        const row = document.createElement('div');
+        // Agrego la clase row de bootstrap
+        row.classList.add('row', 'py-3', 'border-top');
+
+        const nombre = document.createElement('div');
+        // agrego clases de bootstrap col-md-4
+        nombre.classList.add('col-md-4')
+        // Asigno valor al nombre
+        nombre.textContent = platillo.nombre;
+
+        // Construyo div para el precio
+        const precio = document.createElement('div');
+        precio.classList.add('col-md-3', 'fw-bold');
+        precio.textContent = `$${platillo.precio}`;
+
+        // construyo div para la categoria
+        const categoria = document.createElement('div');
+        categoria.classList.add('col-md-3');
+        /**Utilizo el objeto categorias y le paso en el 
+         * corchete el value de platillo.categoria para
+         * asignarles valor
+         */
+        categoria.textContent = categorias[platillo.categoria];
+
+        // Agrego el nombre, el precio a la fila
+        row.appendChild(nombre);
+        row.appendChild(precio);
+        row.appendChild(categoria);
+
+        // Agrego la fila al contenido
+        contenidoDiv.appendChild(row);
+    });
+
+}
