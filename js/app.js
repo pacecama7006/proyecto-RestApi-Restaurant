@@ -141,6 +141,19 @@ function mostrarPlatillos(platillos) {
         inputCantidad.value = 0;
         inputCantidad.id = `producto-${platillo.id}`;
         inputCantidad.classList.add('form-control');
+
+        /**Función que detecta la cantidad y el platillo
+         * que se está agregando, lo hago primero con
+         * una función lineal, para que no me llame
+         * en automático todos los ids y sólo detecte
+         * el input donde hice el cambio
+         */
+        inputCantidad.onchange = function (){
+            const cantidad = parseInt(inputCantidad.value);
+            // Le paso un objeto de platillo
+            agregarPlatillo({...platillo, cantidad});
+        };
+
         // Creo un div para agregar el input y meterlo
         // en la grid de bootstrap
         const agregar = document.createElement('div');
@@ -158,4 +171,242 @@ function mostrarPlatillos(platillos) {
         contenidoDiv.appendChild(row);
     });
 
+}
+// Fin mostrarPlatillos
+
+function agregarPlatillo(producto) {
+    // console.log(producto);
+
+    // Extraer el pedido actual del objeto cliente
+    let {pedido} = cliente;
+
+    // Revisar que la cantidad sea mayor a 0
+    if (producto.cantidad > 0) {
+        // console.log('Si es mayor a 0');
+
+        // Verifico si un producto ya está en el pedido que
+        // es un array
+        if (pedido.some(articulo => articulo.id === producto.id)) {
+            /**El artículo ya existe. Hay que actualizar la
+             * cantidad. Creo una nueva variable para almacenar
+             * un map que me permita actualizar la cantidad
+             */
+            const pedidoActualizado = pedido.map(articulo => {
+                // Identifico el artículo que sea el mismo
+                if (articulo.id === producto.id) {
+                    // Actualizo la cantidad
+                    articulo.cantidad = producto.cantidad;
+                }
+                // Asigno el nuevo artículo
+                return articulo
+            });
+            // Se asigna el nuevo array a cliente.pedido
+            cliente.pedido = [...pedidoActualizado];
+
+        }else{
+            // El artículo no existe, Le paso una copia y le agrego el nuevo producto
+            cliente.pedido = [...pedido, producto];
+
+        }
+        
+    } else {
+        // console.log('No es mayor a 0');
+        /**Eliminar elementos cuando la cantidad es 0. Utilizamos
+         * filter, que nos permite sacar elementos de un arreglo
+         */
+        const resultado = pedido.filter(articulo => articulo.id !== producto.id);
+        // console.log(resultado);
+        // Asigno copia del resultado a cliente.pedido
+        cliente.pedido = [...resultado];
+
+    }
+
+    // console.log(cliente.pedido);
+
+    // Limpiar el código HTML previo
+    limpiarHTML();
+
+    // Si el array del pedido de cliente tiene algo
+    if (cliente.pedido.length) {
+        // Mostrar el resumen
+        actualizarResumen()
+    }else{
+        // Si el array del pedido no tiene nada
+        mensajePedidoVacio();
+    }
+    
+}
+// Fin agregarPlatillo
+
+function actualizarResumen() {
+    // console.log('Desde actualizar resumen');
+
+    // Selecciono el div con la clase contenido que está en la sección resumen
+    const contenido = document.querySelector('#resumen .contenido');
+
+    // Creo div para el resumen
+    const resumen = document.createElement('div');
+    resumen.classList.add('col-md-6', 'card', 'py-5', 'px-3', 'shadow');
+
+    // Información de la mesa
+    const mesa = document.createElement('p');
+    mesa.textContent = 'Mesa: ';
+    mesa.classList.add('fw-bold');
+
+    const mesaSpan = document.createElement('span');
+    mesaSpan.textContent = cliente.mesa;
+    mesaSpan.classList.add('fw-normal');
+
+    // Agrego el span al párrafo de mesa
+    mesa.appendChild(mesaSpan);
+
+    // Información de la mesa
+    const hora = document.createElement('p');
+    hora.textContent = 'Hora: ';
+    hora.classList.add('fw-bold');
+
+    const horaSpan = document.createElement('span');
+    horaSpan.textContent = cliente.hora;
+    horaSpan.classList.add('fw-normal');
+
+    // Agrego el span al párrafo de hora
+    hora.appendChild(horaSpan);
+
+    // Título de la sección
+    const heading = document.createElement('h3');
+    heading.textContent = 'Platillos consumidos';
+    heading.classList.add('my-4', 'text-center');
+
+    // iterar sobre el array de pedidos
+    const grupo = document.createElement('ul');
+    grupo.classList.add('list-group');
+
+    const {pedido} = cliente;
+
+    pedido.forEach(articulo => {
+        // console.log(articulo);
+        const {nombre, cantidad, id, precio} = articulo;
+
+        const lista = document.createElement('li');
+        lista.classList.add('list-group-item');
+
+        // Creamos el nombre del producto que selecciono el usuario
+        const nombreProducto = document.createElement('h4');
+        nombreProducto.classList.add('my-4');
+        nombreProducto.textContent = nombre;
+
+        // Cantidad de producto
+        const cantidadLabel = document.createElement('p');
+        cantidadLabel.classList.add('fw-bold');
+        cantidadLabel.textContent = 'Cantidad: ';
+
+        const cantidadValor = document.createElement('span');
+        cantidadValor.classList.add('fw-normal');
+        cantidadValor.textContent = cantidad;
+
+        // Precio de producto
+        const precioLabel = document.createElement('p');
+        precioLabel.classList.add('fw-bold');
+        precioLabel.textContent = 'Precio: ';
+
+        const precioValor = document.createElement('span');
+        precioValor.classList.add('fw-normal');
+        precioValor.textContent = `$${precio}`;
+
+        // Sub-Total del producto
+        const subTotalLabel = document.createElement('p');
+        subTotalLabel.classList.add('fw-bold');
+        subTotalLabel.textContent = 'Sub-Total platillo: ';
+
+        const subTotalValor = document.createElement('span');
+        subTotalValor.classList.add('fw-normal');
+        subTotalValor.textContent = calcularSubtotal(precio, cantidad);
+
+        // Botón para eliminar
+        const eliminarBtn = document.createElement('button');
+        eliminarBtn.classList.add('btn', 'btn-danger');
+        eliminarBtn.textContent = 'Eliminar del pedido';
+
+        // Función para eliminar del pedido
+        eliminarBtn.onclick = function (){
+            eliminarProducto(id);
+        };
+
+        // Agregar valores a sus contenedores
+        cantidadLabel.appendChild(cantidadValor);
+        precioLabel.appendChild(precioValor);
+        subTotalLabel.appendChild(subTotalValor);
+
+
+        // Agregar elementos al li
+        lista.appendChild(nombreProducto);
+        lista.appendChild(cantidadLabel);
+        lista.appendChild(precioLabel);
+        lista.appendChild(subTotalLabel);
+        lista.appendChild(eliminarBtn);
+
+        // Agregar elementos al ul
+        grupo.appendChild(lista);
+    });
+
+    // Agrego la mesa, la hora, el heading y el grupo de ul al resumen
+    resumen.appendChild(mesa);
+    resumen.appendChild(hora);
+    resumen.appendChild(heading);
+    resumen.appendChild(grupo);
+
+    // Agrego el resumen al contenido
+    contenido.appendChild(resumen);
+
+}
+// Fin actualizarResumen
+
+function limpiarHTML() {
+    const contenido = document.querySelector('#resumen .contenido');
+
+    while (contenido.firstChild) {
+        contenido.removeChild(contenido.firstChild);
+    }
+}
+// Fin limpiarHTML
+
+function calcularSubtotal(precio, cantidad) {
+    return `$ ${precio * cantidad}`;
+}
+// calcularSubtotal
+
+function eliminarProducto(id) {
+    // console.log('Eliminando...', id);
+    const {pedido} = cliente;
+    const resultado = pedido.filter(articulo => articulo.id !== id);
+        // console.log(resultado);
+        // Asigno copia del resultado a cliente.pedido
+        cliente.pedido = [...resultado];
+        // console.log(cliente.pedido);
+
+        // Limpiamos el html previo
+        limpiarHTML();
+
+        if (cliente.pedido.length) {
+            // Mostramos nuevamente el pedido actualizado
+            actualizarResumen();
+        } else {
+            mensajePedidoVacio();
+        }
+
+        // El producto se eliminó por lo tanto regresamos la cantidad a 0 en el formulario
+        const productoEliminado = `#producto-${id}`;
+        // console.log(productoEliminado);
+        const inputEliminado = document.querySelector(productoEliminado);
+        inputEliminado.value= 0;
+}
+// Fin eliminarProducto
+
+function mensajePedidoVacio() {
+    const contenido = document.querySelector('#resumen .contenido');
+    const texto = document.createElement('p');
+    texto.classList.add('text-center');
+    texto.textContent = 'Añade los elementos del pedido';
+
+    contenido.appendChild(texto);
 }
