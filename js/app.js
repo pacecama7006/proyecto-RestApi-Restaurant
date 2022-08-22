@@ -578,7 +578,7 @@ function mostrarTotalHTML(subtotal,total, propina) {
     // Creamos parrafo para el total
     const totalParrafo = document.createElement('p');
     totalParrafo.classList.add('fs-4', 'fw-bold', 'mt-2');
-    totalParrafo.textContent = 'Propina: ';
+    totalParrafo.textContent = 'Total a pagar: ';
 
     // Creamos el span de el total
     const totalSpan = document.createElement('span');
